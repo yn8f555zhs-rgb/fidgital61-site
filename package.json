@@ -1,0 +1,8 @@
+{
+  "name": "fidgital61-site",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "latest"
+  }
+}
