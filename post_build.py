@@ -24,3 +24,11 @@ for rel in LOCAL_FILES:
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src, dst)
     print('local source copied', rel)
+
+for rel in ['federation.html','competitions.html','documents.html','team.html','contacts.html']:
+    page = DIST / rel
+    text = page.read_text(encoding='utf-8')
+    if 'assets/site-sections.css' not in text:
+        text = text.replace('<link rel="stylesheet" href="assets/style.css">', '<link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/site-sections.css">', 1)
+        page.write_text(text, encoding='utf-8')
+        print('section stylesheet injected', rel)
