@@ -15,6 +15,7 @@ const form = $('appForm');
 let rhythmCounter = 0;
 let teamCounter = 0;
 const lookupCache = new Map();
+const teamLookupCache = new Map();
 
 function activeCompetitions(){
   return (cfg.competitions || []).filter(x =>
@@ -179,9 +180,93 @@ function attachAutocomplete(card){
   });
 }
 
+function hideTeamSuggestions(teamCard){
+  const box = teamCard.querySelector('.team-suggestions');
+  if(box){
+    box.innerHTML = '';
+    box.classList.add('hidden');
+  }
+}
+
+function renderTeamSuggestions(teamCard, results){
+  const box = teamCard.querySelector('.team-suggestions');
+  if(!box) return;
+  box.innerHTML = '';
+  if(!results.length){
+    box.classList.add('hidden');
+    return;
+  }
+
+  results.slice(0, 8).forEach(saved => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'athlete-option';
+    const strong = document.createElement('strong');
+    strong.textContent = saved.teamName || 'Команда ДТС';
+    const mains = (saved.athletes || []).filter(a => String(a.role || '').startsWith('Основной')).length;
+    const reserves = (saved.athletes || []).filter(a => String(a.role || '').startsWith('Запасной')).length;
+    const small = document.createElement('span');
+    small.textContent = `${mains} основных${reserves ? ` • ${reserves} запасных` : ''}${saved.lastCompetition ? ` • ${saved.lastCompetition}` : ''}`;
+    btn.append(strong, small);
+    btn.addEventListener('click', () => fillSavedTeam(teamCard, saved));
+    box.appendChild(btn);
+  });
+  box.classList.remove('hidden');
+}
+
+async function searchPreviousTeams(teamCard, query){
+  const q = query.trim();
+  if(q.length < 1){
+    hideTeamSuggestions(teamCard);
+    return;
+  }
+  const contact = contactCredentials();
+  if(!contact.email || contact.phone.length < 6){
+    hideTeamSuggestions(teamCard);
+    return;
+  }
+
+  const cacheKey = `${contact.email}|${contact.phone}|${q.toLowerCase()}`;
+  if(teamLookupCache.has(cacheKey)){
+    renderTeamSuggestions(teamCard, teamLookupCache.get(cacheKey));
+    return;
+  }
+
+  try{
+    const res = await fetch('/api/teams', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({email: contact.email, phone: contact.phone, query: q})
+    });
+    if(!res.ok) return hideTeamSuggestions(teamCard);
+    const data = await res.json();
+    const results = Array.isArray(data.results) ? data.results : [];
+    teamLookupCache.set(cacheKey, results);
+    renderTeamSuggestions(teamCard, results);
+  }catch{
+    hideTeamSuggestions(teamCard);
+  }
+}
+
+function attachTeamAutocomplete(teamCard){
+  const input = teamCard.querySelector('[data-team-name]');
+  if(!input) return;
+  let timer;
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => searchPreviousTeams(teamCard, input.value), 220);
+  });
+  input.addEventListener('focus', () => {
+    if(input.value.trim()) searchPreviousTeams(teamCard, input.value);
+  });
+}
+
 document.addEventListener('click', e => {
   document.querySelectorAll('.person').forEach(card => {
     if(!card.contains(e.target)) hideSuggestions(card);
+  });
+  document.querySelectorAll('.team-card').forEach(team => {
+    if(!team.contains(e.target)) hideTeamSuggestions(team);
   });
 });
 
@@ -230,7 +315,7 @@ function addRhythmAthlete(){
 function addReserve(teamCard){
   const list = teamCard.querySelector('.reserve-list');
   const current = list.querySelectorAll('.reserve-athlete').length;
-  if(current >= 2) return;
+  if(current >= 2) return null;
 
   const container = document.createElement('div');
   container.className = 'reserve-athlete';
@@ -251,6 +336,7 @@ function addReserve(teamCard){
   list.appendChild(container);
   attachAutocomplete(card);
   renumberReserves(teamCard);
+  return card;
 }
 
 function renumberReserves(teamCard){
@@ -262,6 +348,33 @@ function renumberReserves(teamCard){
     if(h) h.textContent = `Запасной спортсмен ${index + 1}`;
   });
   teamCard.querySelector('.add-reserve').disabled = reserves.length >= 2;
+}
+
+function fillSavedTeam(teamCard, savedTeam){
+  const nameInput = teamCard.querySelector('[data-team-name]');
+  if(nameInput) nameInput.value = savedTeam.teamName || '';
+
+  const athletes = Array.isArray(savedTeam.athletes) ? savedTeam.athletes : [];
+  const mains = athletes.filter(a => String(a.role || '').startsWith('Основной')).slice(0, 5);
+  const reserves = athletes.filter(a => String(a.role || '').startsWith('Запасной')).slice(0, 2);
+  const mainCards = [...teamCard.querySelectorAll('.main-list .person')];
+
+  mainCards.forEach((card, index) => {
+    ['lastName','firstName','middleName','birthDate','nickname'].forEach(k => {
+      const el = card.querySelector(`[data-k="${k}"]`);
+      if(el) el.value = '';
+    });
+    if(mains[index]) fillAthlete(card, mains[index]);
+  });
+
+  const reserveList = teamCard.querySelector('.reserve-list');
+  reserveList.innerHTML = '';
+  reserves.forEach(reserve => {
+    const card = addReserve(teamCard);
+    if(card) fillAthlete(card, reserve);
+  });
+  renumberReserves(teamCard);
+  hideTeamSuggestions(teamCard);
 }
 
 function renumberTeams(){
@@ -289,7 +402,14 @@ function addTeam(){
       <div><div class="tag">ДТС</div><h3 class="team-title">Команда ДТС №${teamCounter}</h3></div>
       <button type="button" class="mini-btn danger remove-team">Удалить команду</button>
     </div>
-    <div class="field full"><label>Название команды *</label><input data-team-name required></div>
+    <div class="field full">
+      <label>Название команды *</label>
+      <div class="autocomplete-wrap">
+        <div class="help athlete-lookup-help">Начните вводить название команды. Если эта команда уже участвовала, выберите её — весь сохранённый состав подставится автоматически.</div>
+        <input data-team-name autocomplete="off" required>
+        <div class="team-suggestions athlete-suggestions hidden"></div>
+      </div>
+    </div>
     <div class="roster-label">Основной состав — 5 спортсменов</div>
     <div class="main-list">${mains}</div>
     <div class="roster-label">Запасные — до 2 спортсменов</div>
@@ -303,6 +423,7 @@ function addTeam(){
   });
   team.querySelector('.add-reserve').addEventListener('click', () => addReserve(team));
   team.querySelectorAll('.person').forEach(attachAutocomplete);
+  attachTeamAutocomplete(team);
   dtsTeams.appendChild(team);
   renumberTeams();
 }
@@ -330,7 +451,7 @@ function setMode(){
     $('participantsHelp').textContent = 'Добавьте одного или сразу нескольких спортсменов в одну заявку.';
   }else if(mode === 'DTS'){
     $('participantsTitle').textContent = 'Команды ДТС';
-    $('participantsHelp').textContent = 'Добавьте одну или несколько команд. В каждой команде — 5 основных спортсменов и до 2 запасных.';
+    $('participantsHelp').textContent = 'Добавьте одну или несколько команд. Можно выбрать ранее заявленную команду и автоматически восстановить её состав.';
   }
 
   resetParticipants(mode);
@@ -439,7 +560,7 @@ form.addEventListener('submit', async e => {
   const err = validateRoster(payload);
   if(err) return alert(err);
 
-  statusBox.textContent = 'Отправляем заявку…';
+  statusBox.textContent = 'Отправляем предварительную заявку…';
   try{
     const res = await fetch('/api/apply', {
       method:'POST',
@@ -450,10 +571,12 @@ form.addEventListener('submit', async e => {
     if(!res.ok || !data.ok) throw new Error(data.error || 'Ошибка отправки');
 
     lookupCache.clear();
-    let message = `Заявка <b>${data.id || payload.submissionId}</b> принята. Спортсмены сохранены для следующих заявок.`;
+    teamLookupCache.clear();
+    let message = `Предварительная заявка <b>${data.id || payload.submissionId}</b> принята. Данные спортсменов${payload.discipline === 'DTS' ? ' и команд' : ''} сохранены для следующих заявок.`;
     if(data.googleSheetsSynced === false){
       message += ' Заявка сохранена в системе Федерации; синхронизация с Google-таблицей будет выполнена отдельно.';
     }
+    message += ' Не забудьте представить официальную заявку на бумажном носителе с медицинским допуском.';
     statusBox.innerHTML = message;
   }catch(ex){
     statusBox.textContent = 'Не удалось отправить заявку. Попробуйте ещё раз или свяжитесь с Федерацией.';
