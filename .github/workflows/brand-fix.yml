@@ -1,0 +1,43 @@
+name: Brand fix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/brand-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-brand:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace header branding
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          brand = '<span class="brand-full">Федерация фиджитал-спорта<br>Ростовской области</span>'
+          for p in Path('.').glob('*.html'):
+              s = p.read_text(encoding='utf-8')
+              s2 = s.replace('<span>FFSRO.RU</span>', brand).replace('<span>Фиджитал 61</span>', brand)
+              if s2 != s:
+                  p.write_text(s2, encoding='utf-8')
+
+          css = Path('assets/site-sections.css')
+          s = css.read_text(encoding='utf-8')
+          s = s.replace('content:"Федерация фиджитал-спорта";white-space:normal', 'content:"Федерация фиджитал-спорта\\AРостовской области";white-space:pre')
+          css.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add '*.html' assets/site-sections.css
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git commit -m "Use full federation name in site header"
+          git push
