@@ -23,7 +23,8 @@ function normalizeText(value: unknown) {
 }
 
 function scopedStore(name: string, context: any) {
-  const isProduction = context?.deploy?.context === "production";
+  const deployContext = Netlify.context?.deploy?.context || context?.deploy?.context || "";
+  const isProduction = deployContext === "production";
   return isProduction
     ? getStore(name, { consistency: "strong" })
     : getDeployStore(name);
