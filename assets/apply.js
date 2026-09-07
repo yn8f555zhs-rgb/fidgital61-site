@@ -158,12 +158,18 @@ function resetParticipants(mode){
   if(mode === 'DTS' && dtsTeams.querySelectorAll('.team-card').length === 0) addTeam();
 }
 
+function setBlockFieldsEnabled(block, enabled){
+  block.querySelectorAll('input,select,textarea').forEach(el => { el.disabled = !enabled; });
+}
+
 function setMode(){
   const mode = discipline.value;
   const selected = mode === 'DTS' || mode === 'Ритм-симулятор';
   details.classList.toggle('hidden', !selected);
   rhythmBlock.classList.toggle('hidden', mode !== 'Ритм-симулятор');
   dtsBlock.classList.toggle('hidden', mode !== 'DTS');
+  setBlockFieldsEnabled(rhythmBlock, mode === 'Ритм-симулятор');
+  setBlockFieldsEnabled(dtsBlock, mode === 'DTS');
 
   if(mode === 'Ритм-симулятор'){
     $('participantsTitle').textContent = 'Спортсмены — ритм-симулятор';
@@ -173,6 +179,8 @@ function setMode(){
     $('participantsHelp').textContent = 'Добавьте одну или несколько команд. В каждой команде — 5 основных спортсменов и до 2 запасных.';
   }
   resetParticipants(mode);
+  setBlockFieldsEnabled(rhythmBlock, mode === 'Ритм-симулятор');
+  setBlockFieldsEnabled(dtsBlock, mode === 'DTS');
 }
 
 function collectCard(card){
