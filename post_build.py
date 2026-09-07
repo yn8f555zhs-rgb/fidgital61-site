@@ -3,10 +3,17 @@ import shutil
 
 DIST = Path('dist')
 LOCAL_FILES = [
+    'index.html',
+    'federation.html',
+    'competitions.html',
+    'documents.html',
+    'team.html',
+    'contacts.html',
     'apply.html',
     'privacy.html',
     'assets/apply.js',
     'assets/style.css',
+    'assets/site-sections.css',
     'assets/form-config.js',
     'backend/google-apps-script/Code.gs',
 ]
