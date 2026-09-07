@@ -45,7 +45,7 @@ body{background:#050816;background-image:radial-gradient(circle at 85% 4%,rgba(1
 body:before{background-size:32px 32px;background-image:linear-gradient(rgba(90,138,220,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(90,138,220,.035) 1px,transparent 1px)}
 .wrap{width:calc(100% - 28px)}
 header{position:sticky;background:rgba(4,7,18,.78);backdrop-filter:blur(24px) saturate(140%);border-bottom:1px solid rgba(124,170,255,.16)}
-.nav{min-height:66px;gap:8px}.brand{min-width:0;gap:9px}.brand img{width:44px;height:40px}.brand:after{content:"Федерация фиджитал-спорта";white-space:normal;font-size:11px;line-height:1.05;max-width:190px;letter-spacing:-.02em}
+.nav{min-height:66px;gap:8px}.brand{min-width:0;gap:9px}.brand img{width:44px;height:40px}.brand:after{content:"Федерация фиджитал-спорта\AРостовской области";white-space:pre;font-size:11px;line-height:1.05;max-width:190px;letter-spacing:-.02em}
 .menu{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:1px solid rgba(145,187,255,.2);background:rgba(255,255,255,.035);font-size:23px;box-shadow:0 12px 28px rgba(0,0,0,.26)}
 nav{top:72px;left:12px;right:12px;padding:12px;border-radius:20px;background:rgba(5,11,25,.98);box-shadow:0 28px 80px rgba(0,0,0,.55)}nav a{padding:13px 14px;border-radius:12px;font-size:14px}
 
