@@ -43,6 +43,21 @@ function athleteHash(athlete: any) {
   ].join("|"));
 }
 
+function teamHash(teamName: unknown) {
+  return hash(normalizeText(teamName));
+}
+
+function cleanAthlete(athlete: any) {
+  return {
+    role: String(athlete?.role || "").trim(),
+    lastName: String(athlete?.lastName || "").trim(),
+    firstName: String(athlete?.firstName || "").trim(),
+    middleName: String(athlete?.middleName || "").trim(),
+    birthDate: String(athlete?.birthDate || "").trim(),
+    nickname: String(athlete?.nickname || "").trim()
+  };
+}
+
 async function saveAthletes(payload: any, context: any) {
   const store = scopedStore("athlete-directory", context);
   const owner = contactHash(payload.contact || {});
@@ -63,6 +78,29 @@ async function saveAthletes(payload: any, context: any) {
       lastTeamName: String(athlete.teamName || payload.teamName || "").trim(),
       lastCompetition: String(payload.competition || "").trim(),
       lastDiscipline: String(payload.discipline || "").trim(),
+      updatedAt: now
+    });
+  }
+}
+
+async function saveTeams(payload: any, context: any) {
+  if (payload.discipline !== "DTS") return;
+  const teams = Array.isArray(payload.teams) ? payload.teams : [];
+  if (!teams.length) return;
+
+  const store = scopedStore("team-directory", context);
+  const owner = contactHash(payload.contact || {});
+  const now = new Date().toISOString();
+
+  for (const team of teams) {
+    const teamName = String(team?.teamName || "").trim();
+    if (!teamName) continue;
+    const athletes = (Array.isArray(team?.athletes) ? team.athletes : []).map(cleanAthlete);
+
+    await store.setJSON(`${owner}/${teamHash(teamName)}`, {
+      teamName,
+      athletes,
+      lastCompetition: String(payload.competition || "").trim(),
       updatedAt: now
     });
   }
@@ -151,6 +189,7 @@ export default async (req: Request, context: any) => {
     });
 
     await saveAthletes(payload, context);
+    await saveTeams(payload, context);
     const googleSheetsSynced = await syncGoogleSheets(payload);
 
     return Response.json({
