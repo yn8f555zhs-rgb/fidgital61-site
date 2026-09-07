@@ -4,6 +4,7 @@ import shutil
 DIST = Path('dist')
 LOCAL_FILES = [
     'apply.html',
+    'privacy.html',
     'assets/apply.js',
     'assets/style.css',
     'assets/form-config.js',
