@@ -1,1 +1,108 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Заявка на соревнования Федерации фиджитал-спорта Ростовской области"><title>Подать заявку — Фиджитал 61</title><link rel="stylesheet" href="assets/style.css"></head><body><header><div class="wrap nav"><a class="brand" href="index.html"><img src="https://6a9ace9ee13f755712aab6c6--fidgital61.netlify.app/assets/logo.png" alt="Логотип"><span>Фиджитал 61</span></a><a class="btn" href="index.html">← На сайт</a></div></header><main class="form-shell"><div class="wrap"><div class="form-card"><div class="tag">Электронная заявка</div><h1 style="font-size:clamp(38px,6vw,64px)">Подать заявку</h1><p class="lead">Сначала выберите соревнование, затем формат участия: команда ДТС или спортсмен в ритм-симуляторе.</p><div class="notice">Через эту форму принимаются заявки только на открытые региональные соревнования Ростовской области и региональные мероприятия Федерации.</div><form id="appForm"><div class="form-grid"><div class="field full"><label for="competition">Соревнование *</label><select id="competition" required><option value="">— Выберите открытое соревнование —</option></select></div><div class="field full"><label for="discipline">Формат участия *</label><select id="discipline" required disabled><option value="">— Сначала выберите соревнование —</option></select></div><div class="field"><label>Фамилия представителя *</label><input id="cLast" required></div><div class="field"><label>Имя представителя *</label><input id="cFirst" required></div><div class="field"><label>Отчество представителя</label><input id="cMiddle"></div><div class="field"><label>Телефон *</label><input id="cPhone" type="tel" required></div><div class="field"><label>E-mail *</label><input id="cEmail" type="email" required></div><div class="field"><label>Город *</label><input id="cCity" required></div><div class="field full"><label>Организация / клуб</label><input id="cOrg"></div></div><section id="dtsBlock" class="hidden" style="padding:26px 0 0;border:0"><div class="field"><label>Название команды *</label><input id="teamName"></div><div id="dtsPeople"></div></section><section id="rhythmBlock" class="hidden" style="padding:26px 0 0;border:0"><div id="rhythmPerson"></div></section><div class="field" style="margin-top:20px"><label>Комментарий</label><textarea id="comment"></textarea></div><div class="checks"><label><input id="consent" type="checkbox" required> <span>Согласен(на) на обработку персональных данных для приёма и рассмотрения заявки.</span></label><label><input id="truth" type="checkbox" required> <span>Подтверждаю достоверность указанных сведений.</span></label></div><div class="actions"><button class="btn primary" type="submit">Отправить заявку</button><button class="btn" type="button" id="downloadBtn">Скачать копию</button></div><div id="status" class="status">Система приёма заявок подключена.</div></form></div></div></main><script src="assets/form-config.js"></script><script src="assets/apply.js"></script></body></html>
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Заявка на соревнования Федерации фиджитал-спорта Ростовской области">
+  <title>Подать заявку — Фиджитал 61</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .form-step{padding:24px 0;border-top:1px solid rgba(130,170,255,.12)}
+    .form-step:first-of-type{border-top:0}
+    .step-title{display:flex;gap:14px;align-items:flex-start;margin-bottom:18px}
+    .step-title>span{display:grid;place-items:center;min-width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--cyan),var(--blue));color:#06111d;font-weight:950}
+    .step-title h2{font-size:24px;margin:0 0 4px}
+    .step-title p{margin:0;color:var(--muted)}
+    .person-head,.team-head{display:flex;justify-content:space-between;gap:12px;align-items:center}
+    .team-card{padding:20px;border:1px solid rgba(76,141,255,.28);border-radius:18px;background:rgba(10,20,40,.56);margin-top:16px}
+    .team-head{margin-bottom:16px}.team-head h3{margin:8px 0 0}
+    .roster-label{margin:20px 0 4px;font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#8ffcf2}
+    .mini-btn{border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fff;padding:8px 11px;border-radius:10px;font-weight:800;cursor:pointer}
+    .mini-btn.danger{color:#ffb5bf;border-color:rgba(255,90,110,.25)}
+    .add-btn{margin-top:16px;cursor:pointer}
+    .person{position:relative}
+    @media(max-width:850px){.person-head,.team-head{align-items:flex-start;flex-direction:column}.team-head .danger{align-self:flex-end}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt="Логотип"><span>Фиджитал 61</span></a>
+    <a class="btn" href="index.html">← На сайт</a>
+  </div>
+</header>
+
+<main class="form-shell">
+  <div class="wrap">
+    <div class="form-card">
+      <div class="tag">Электронная заявка</div>
+      <h1 style="font-size:clamp(38px,6vw,64px)">Подать заявку</h1>
+      <p class="lead">Одна заявка может включать сразу нескольких спортсменов или несколько команд ДТС.</p>
+      <div class="notice">Показываются только открытые региональные соревнования Ростовской области и региональные мероприятия Федерации.</div>
+
+      <form id="appForm">
+        <section class="form-step">
+          <div class="step-title"><span>1</span><div><h2>Соревнование и формат</h2><p>Сначала выберите соревнование, затем доступный формат участия.</p></div></div>
+          <div class="form-grid">
+            <div class="field full">
+              <label for="competition">Соревнование *</label>
+              <select id="competition" required><option value="">— Выберите открытое соревнование —</option></select>
+            </div>
+            <div class="field full">
+              <label for="discipline">Формат участия *</label>
+              <select id="discipline" required disabled><option value="">— Сначала выберите соревнование —</option></select>
+            </div>
+          </div>
+        </section>
+
+        <div id="applicationDetails" class="hidden">
+          <section class="form-step">
+            <div class="step-title"><span>2</span><div><h2 id="participantsTitle">Участники</h2><p id="participantsHelp"></p></div></div>
+
+            <div id="rhythmBlock" class="hidden">
+              <div id="rhythmPeople"></div>
+              <button class="btn add-btn" type="button" id="addRhythmBtn">＋ Добавить ещё спортсмена</button>
+            </div>
+
+            <div id="dtsBlock" class="hidden">
+              <div id="dtsTeams"></div>
+              <button class="btn add-btn" type="button" id="addTeamBtn">＋ Добавить ещё команду ДТС</button>
+            </div>
+          </section>
+
+          <section class="form-step">
+            <div class="step-title"><span>3</span><div><h2>Контактное лицо заявки</h2><p>Один контакт для связи по всей заявке.</p></div></div>
+            <div class="form-grid">
+              <div class="field"><label>Фамилия *</label><input id="cLast" required></div>
+              <div class="field"><label>Имя *</label><input id="cFirst" required></div>
+              <div class="field"><label>Отчество</label><input id="cMiddle"></div>
+              <div class="field"><label>Телефон *</label><input id="cPhone" type="tel" required></div>
+              <div class="field"><label>E-mail *</label><input id="cEmail" type="email" required></div>
+              <div class="field"><label>Город *</label><input id="cCity" required></div>
+              <div class="field full"><label>Организация / клуб</label><input id="cOrg"></div>
+            </div>
+          </section>
+
+          <section class="form-step">
+            <div class="step-title"><span>4</span><div><h2>Подтверждение и отправка</h2><p>Проверьте данные перед отправкой.</p></div></div>
+            <div class="field"><label>Комментарий</label><textarea id="comment"></textarea></div>
+            <div class="checks">
+              <label><input id="consent" type="checkbox" required> <span>Согласен(на) на обработку персональных данных для приёма и рассмотрения заявки.</span></label>
+              <label><input id="truth" type="checkbox" required> <span>Подтверждаю достоверность указанных сведений.</span></label>
+            </div>
+            <div class="actions">
+              <button class="btn primary" type="submit">Отправить заявку</button>
+              <button class="btn" type="button" id="downloadBtn">Скачать копию</button>
+            </div>
+            <div id="status" class="status">Система приёма заявок подключена.</div>
+          </section>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script src="assets/form-config.js"></script>
+<script src="assets/apply.js"></script>
+</body>
+</html>
