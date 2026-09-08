@@ -1,0 +1,50 @@
+name: Install Mega festival photo
+
+on:
+  push:
+    paths:
+      - '.tmp/newsphoto/READY'
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build photo and update homepage
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64, re, shutil
+
+          parts = sorted(Path('.tmp/newsphoto').glob('photo.part*'))
+          if not parts:
+              raise SystemExit('No photo parts found')
+          payload = ''.join(p.read_text(encoding='utf-8') for p in parts)
+          data = base64.b64decode(payload)
+          out = Path('assets/news/mega-festival-digital-dance-2026.jpg')
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.write_bytes(data)
+
+          page = Path('index.html')
+          html = page.read_text(encoding='utf-8')
+          pattern = r'<article><img src="data:image/jpeg;base64,[^"]+"'
+          replacement = '<article><img src="assets/news/mega-festival-digital-dance-2026.jpg" alt="Победители фестиваля по ритм-симулятору в ТЦ «МЕГА»"'
+          html2, count = re.subn(pattern, replacement, html, count=1)
+          if count != 1:
+              raise SystemExit(f'Expected one embedded news image, replaced {count}')
+          page.write_text(html2, encoding='utf-8')
+
+          shutil.rmtree('.tmp/newsphoto')
+          PY
+      - name: Commit generated photo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Replace Mega festival news photo"
+          git push
