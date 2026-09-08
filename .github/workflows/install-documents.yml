@@ -1,0 +1,97 @@
+name: Install federation documents
+
+on:
+  push:
+    paths:
+      - '.tmp/docs-upload/READY'
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore document archive and install current editions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+          from io import BytesIO
+          import base64
+          import shutil
+          import zipfile
+
+          BASE = 'https://6a9ace9ee13f755712aab6c6--fidgital61.netlify.app'
+
+          legacy_files = [
+              'documents/EVSK.xls',
+              'documents/applications_registry_template.xlsx',
+              'documents/ustav_federacii.pdf',
+              'documents/prikaz_o_gosudarstvennoy_akkreditacii.pdf',
+              'documents/svidetelstvo_minjust.pdf',
+              'documents/ranks/shablon_hodataystvo_2_3_razryad.docx',
+              'documents/ranks/primer_predstavleniya_2_razryad.docx',
+              'documents/competitions/2026/championship_ro/itogovyi_protokol_dts_championship_ro_2026.pdf',
+              'documents/competitions/2026/championship_ro/itogovyi_protokol_ritm_simulyator_championship_ro_2026.pdf',
+              'documents/competitions/2026/itogovyi_protokol_dts_yufo_skfo_2026.pdf',
+              'documents/competitions/2026/itogovyi_protokol_ritm_simulyator_yufo_skfo_2026.pdf',
+              'documents/competitions/2026/polozhenie_fidzhital_sport_2026.pdf',
+              'documents/presidium/2026/protocol_prezidiuma_01_01-02-2026.pdf',
+              'documents/presidium/2026/protocol_prezidiuma_02_01-03-2026.pdf',
+              'documents/presidium/2026/protocol_prezidiuma_03_01-04-2026.pdf',
+              'documents/presidium/2026/protocol_prezidiuma_04_15-04-2026.pdf',
+              'documents/presidium/2026/protocol_prezidiuma_05_10-06-2026.pdf',
+              'documents/presidium/2026/protocol_prezidiuma_06_30-06-2026.pdf',
+              'documents/regulations/2026/polozhenie_trenerskiy_sovet_01-03-2026.pdf',
+              'documents/regulations/2026/polozhenie_sudeyskiy_komitet_15-04-2026.pdf',
+              'documents/regulations/2026/polozhenie_II_III_razryady_01-04-2026.pdf',
+              'documents/regulations/2026/polozhenie_I_KMS_MS_30-06-2026.pdf',
+          ]
+
+          for rel in legacy_files:
+              dest = Path(rel)
+              if dest.exists() and dest.stat().st_size > 0:
+                  print('exists', rel)
+                  continue
+              dest.parent.mkdir(parents=True, exist_ok=True)
+              req = Request(f'{BASE}/{rel}', headers={'User-Agent': 'ffsro-github-pages-document-migration/1.0'})
+              with urlopen(req, timeout=60) as response, open(dest, 'wb') as out:
+                  shutil.copyfileobj(response, out)
+              print('downloaded', rel, dest.stat().st_size)
+
+          upload_dir = Path('.tmp/docs-upload')
+          parts = sorted(upload_dir.glob('part*'))
+          if not parts:
+              raise SystemExit('No document upload chunks found')
+          encoded = ''.join(p.read_text(encoding='utf-8').strip() for p in parts)
+          payload = base64.b64decode(encoded, validate=True)
+          with zipfile.ZipFile(BytesIO(payload)) as archive:
+              archive.extractall('.')
+              print('installed current archive:', ', '.join(archive.namelist()))
+
+          shutil.rmtree(upload_dir, ignore_errors=True)
+          shutil.rmtree('.tmp/localacts', ignore_errors=True)
+          for stale in [
+              '.tmp/protocol_bundle.b64.part01',
+              '.tmp/test10k.txt',
+              '.tmp/test5k.txt',
+          ]:
+              Path(stale).unlink(missing_ok=True)
+          PY
+
+      - name: Commit installed documents
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Publish federation document archive"
+            git push
+          fi
