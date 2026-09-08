@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Просмотр официального документа Федерации фиджитал-спорта Ростовской области">
+  <title>Просмотр документа — Федерация фиджитал-спорта Ростовской области</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .viewer-shell{padding:32px 0 64px}
+    .viewer-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:18px}
+    .viewer-top h1{font-size:clamp(26px,4vw,42px);line-height:1.08;margin:10px 0 8px}
+    .viewer-top p{margin:0;color:var(--muted,#98a9c2);max-width:760px}
+    .viewer-frame{position:relative;height:min(78vh,980px);min-height:620px;border:1px solid rgba(130,170,255,.20);border-radius:20px;overflow:hidden;background:#111827;box-shadow:0 24px 70px rgba(0,0,0,.30)}
+    .viewer-frame iframe{width:100%;height:100%;border:0;background:#fff}
+    .viewer-note{margin-top:16px;padding:14px 16px;border:1px solid rgba(130,170,255,.16);border-radius:14px;color:var(--muted,#98a9c2);font-size:13px;background:rgba(255,255,255,.025)}
+    .viewer-error{padding:34px;border:1px solid rgba(255,120,120,.25);border-radius:18px;background:rgba(255,90,90,.05)}
+    @media(max-width:760px){.viewer-top{flex-direction:column}.viewer-frame{min-height:70vh;height:70vh}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt="Логотип"><span class="brand-full">Федерация фиджитал-спорта<br>Ростовской области</span></a>
+    <button class="menu" aria-label="Меню">☰</button>
+    <nav>
+      <a href="index.html">Главная</a><a href="federation.html">Федерация</a><a href="competitions.html">Соревнования</a><a class="active" href="documents.html">Документы</a><a href="team.html">Сборная</a><a href="contacts.html">Контакты</a><a href="apply.html">Заявка</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <section class="viewer-shell">
+    <div class="wrap">
+      <div class="viewer-top">
+        <div><div class="tag">Официальный документ</div><h1 id="doc-title">Просмотр документа</h1><p id="doc-meta"></p></div>
+        <a class="btn secondary" href="documents.html">← К документам</a>
+      </div>
+      <div id="viewer"></div>
+    </div>
+  </section>
+</main>
+<footer><div class="wrap foot"><div><b>Федерация фиджитал-спорта Ростовской области</b></div><div><a href="contacts.html">Контакты</a><br><a href="privacy.html">Политика обработки персональных данных</a></div></div></footer>
+<script>
+const docs={
+  'protocol-2025-02':{title:'Протокол Президиума № 2 от 12.12.2025',meta:'Архив Президиума • 2025 год',file:'documents/presidium/2025/protocol_prezidiuma_02_12-12-2025.pdf'},
+  'protocol-2026-01':{title:'Протокол Президиума № 1 от 01.02.2026',meta:'Президиум • создание Тренерского совета и Судейского комитета',file:'documents/presidium/2026/protocol_prezidiuma_01_01-02-2026.pdf'},
+  'protocol-2026-02':{title:'Протокол Президиума № 2 от 01.03.2026',meta:'Президиум • Тренерский совет',file:'documents/presidium/2026/protocol_prezidiuma_02_01-03-2026.pdf'},
+  'protocol-2026-03':{title:'Протокол Президиума № 3 от 01.04.2026',meta:'Президиум • оформление документов на II и III спортивные разряды',file:'documents/presidium/2026/protocol_prezidiuma_03_01-04-2026.pdf'},
+  'protocol-2026-04':{title:'Протокол Президиума № 4 от 15.04.2026',meta:'Президиум • утверждение Положения о Судейском комитете',file:'documents/presidium/2026/protocol_prezidiuma_04_15-04-2026.pdf'},
+  'protocol-2026-05':{title:'Протокол Президиума № 5 от 10.06.2026',meta:'Президиум • разработка Положения по I разряду, КМС и МС',file:'documents/presidium/2026/protocol_prezidiuma_05_10-06-2026.pdf'},
+  'protocol-2026-06':{title:'Протокол Президиума № 6 от 30.06.2026',meta:'Президиум • утверждение Положения по I разряду, КМС и МС',file:'documents/presidium/2026/protocol_prezidiuma_06_30-06-2026.pdf'},
+  'protocol-2026-07':{title:'Протокол Президиума № 7 от 31.08.2026',meta:'Президиум • единая актуализация локальных актов Федерации',file:'documents/presidium/2026/protocol_prezidiuma_07_31-08-2026.pdf'},
+  'reg-trainers-current':{title:'Положение о Тренерском совете',meta:'Действующая редакция • утверждена Протоколом № 7 от 31.08.2026',file:'documents/regulations/2026/polozhenie_trenerskiy_sovet_31-08-2026.pdf'},
+  'reg-judges-current':{title:'Положение о Судейском комитете',meta:'Действующая редакция • утверждена Протоколом № 7 от 31.08.2026',file:'documents/regulations/2026/polozhenie_sudeyskiy_komitet_31-08-2026.pdf'},
+  'reg-ranks-23-current':{title:'Положение о II и III спортивных разрядах',meta:'Действующая редакция • утверждена Протоколом № 7 от 31.08.2026',file:'documents/regulations/2026/polozhenie_II_III_razryady_31-08-2026.pdf'},
+  'reg-ranks-1kmsms-current':{title:'Положение о I разряде, КМС и МС',meta:'Действующая редакция • утверждена Протоколом № 7 от 31.08.2026',file:'documents/regulations/2026/polozhenie_I_KMS_MS_31-08-2026.pdf'},
+  'reg-trainers-old':{title:'Положение о Тренерском совете',meta:'Архивная редакция • 01.03.2026–30.08.2026',file:'documents/regulations/2026/polozhenie_trenerskiy_sovet_01-03-2026.pdf'},
+  'reg-judges-old':{title:'Положение о Судейском комитете',meta:'Архивная редакция • 15.04.2026–30.08.2026',file:'documents/regulations/2026/polozhenie_sudeyskiy_komitet_15-04-2026.pdf'},
+  'reg-ranks-23-old':{title:'Положение о II и III спортивных разрядах',meta:'Архивная редакция • 01.04.2026–30.08.2026',file:'documents/regulations/2026/polozhenie_II_III_razryady_01-04-2026.pdf'},
+  'reg-ranks-1kmsms-old':{title:'Положение о I разряде, КМС и МС',meta:'Архивная редакция • 30.06.2026–30.08.2026',file:'documents/regulations/2026/polozhenie_I_KMS_MS_30-06-2026.pdf'}
+};
+const id=new URLSearchParams(location.search).get('doc');
+const doc=docs[id];
+const title=document.getElementById('doc-title'), meta=document.getElementById('doc-meta'), viewer=document.getElementById('viewer');
+if(!doc){
+  title.textContent='Документ не найден';
+  meta.textContent='Проверьте ссылку или вернитесь в раздел документов.';
+  viewer.innerHTML='<div class="viewer-error">Этот идентификатор документа отсутствует в публичном реестре Федерации.</div>';
+}else{
+  document.title=doc.title+' — Федерация фиджитал-спорта Ростовской области';
+  title.textContent=doc.title; meta.textContent=doc.meta;
+  const src=doc.file+'#toolbar=0&navpanes=0&scrollbar=1&view=FitH';
+  const frame=document.createElement('div'); frame.className='viewer-frame';
+  const iframe=document.createElement('iframe'); iframe.src=src; iframe.title=doc.title; iframe.loading='eager';
+  frame.appendChild(iframe); viewer.appendChild(frame);
+  const note=document.createElement('div'); note.className='viewer-note';
+  note.textContent='Документ открыт во встроенном режиме просмотра без отдельной кнопки скачивания. На публичном сайте технически невозможно полностью запретить сохранение файла средствами самого браузера.';
+  viewer.appendChild(note);
+}
+const b=document.querySelector('.menu'),n=document.querySelector('nav');b.onclick=()=>n.classList.toggle('open');document.querySelectorAll('nav a').forEach(a=>a.onclick=()=>n.classList.remove('open'));
+</script>
+</body>
+</html>
