@@ -21,7 +21,7 @@ jobs:
           from pathlib import Path
           import base64, re, shutil
 
-          parts = sorted(Path('.tmp/newsphoto').glob('photo.part*'))
+          parts = sorted(Path('.tmp/newsphoto').glob('good.part*'))
           if not parts:
               raise SystemExit('No photo parts found')
           payload = ''.join(p.read_text(encoding='utf-8') for p in parts)
