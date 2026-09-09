@@ -1,0 +1,1 @@
+Current approved PDF documents are being published directly to the public documents tree. This staging directory can be removed after verification.
