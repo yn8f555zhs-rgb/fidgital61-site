@@ -1,0 +1,41 @@
+name: Fix brand references
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-brand-references.yml'
+permissions:
+  contents: write
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace old logo references
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          changed=[]
+          for p in Path('.').glob('*.html'):
+              s=p.read_text(encoding='utf-8')
+              n=s.replace('assets/logo.png','assets/brand-mark.svg?v=1')
+              if n!=s:
+                  p.write_text(n,encoding='utf-8')
+                  changed.append(str(p))
+          p=Path('assets/site-sections.css')
+          if p.exists():
+              s=p.read_text(encoding='utf-8')
+              n=s.replace("url('logo.png')","url('brand-mark.svg?v=1')")
+              if n!=s:
+                  p.write_text(n,encoding='utf-8')
+                  changed.append(str(p))
+          print('updated:', ', '.join(changed) or 'none')
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add '*.html' assets/site-sections.css
+          if ! git diff --cached --quiet; then
+            git commit -m "Replace broken logo references with vector mark"
+            git push
+          fi
