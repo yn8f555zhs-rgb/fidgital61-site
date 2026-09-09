@@ -3,7 +3,7 @@ name: Install current federation documents
 on:
   push:
     paths:
-      - '.tmp/current-docs/READY'
+      - '.tmp/docs-upload/part24'
 
 permissions:
   contents: write
@@ -15,23 +15,42 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install current PDF documents
+
+      - name: Rebuild and install current documents
         run: |
           python - <<'PY'
           from pathlib import Path
-          from io import BytesIO
-          import base64, zipfile, shutil
-          d = Path('.tmp/current-docs')
-          parts = sorted(d.glob('part*'))
-          if not parts:
-              raise SystemExit('No current document chunks found')
-          payload = base64.b64decode(''.join(p.read_text().strip() for p in parts), validate=True)
-          with zipfile.ZipFile(BytesIO(payload)) as z:
+          import base64, hashlib, io, zipfile
+
+          expected = '4d1b52ff4e221ed41b11c6f253a174c329d98fa1d3a509cc3f20144d5261623f'
+          d = Path('.tmp/docs-upload')
+          parts = [d / f'part{i:02d}' for i in range(1, 25)]
+          missing = [str(p) for p in parts if not p.exists()]
+          if missing:
+              raise SystemExit('Missing chunks: ' + ', '.join(missing))
+
+          encoded = ''.join(p.read_text(encoding='utf-8') for p in parts)
+          payload = base64.b64decode(encoded, validate=True)
+          actual = hashlib.sha256(payload).hexdigest()
+          if actual != expected:
+              raise SystemExit(f'Archive checksum mismatch: {actual} != {expected}')
+
+          with zipfile.ZipFile(io.BytesIO(payload)) as z:
               z.extractall('.')
-              print('Installed:', *z.namelist(), sep='\n- ')
-          shutil.rmtree(d, ignore_errors=True)
+              print('Installed:')
+              for name in z.namelist():
+                  print(' -', name)
+
+          for p in d.glob('part*'):
+              p.unlink()
+          (d / 'READY').unlink(missing_ok=True)
+          try:
+              d.rmdir()
+          except OSError:
+              pass
           PY
-      - name: Commit current documents
+
+      - name: Commit installed documents
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
