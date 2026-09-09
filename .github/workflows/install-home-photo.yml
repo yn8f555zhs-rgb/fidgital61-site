@@ -1,0 +1,38 @@
+name: Install homepage photo
+
+on:
+  push:
+    paths:
+      - '.tmp/home-photo/READY'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Rebuild homepage image
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets/news
+          cat .tmp/home-photo/part* | tr -d '\n\r' | base64 --decode > assets/news/mega-festival-digital-dance-2026.jpg
+          test -s assets/news/mega-festival-digital-dance-2026.jpg
+          file assets/news/mega-festival-digital-dance-2026.jpg | grep -qi 'JPEG image data'
+          rm -rf .tmp/home-photo
+      - name: Commit image
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/news/mega-festival-digital-dance-2026.jpg .tmp/home-photo || true
+          if ! git diff --cached --quiet; then
+            git commit -m 'Replace broken homepage news photo'
+            git push origin main
+          fi
