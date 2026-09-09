@@ -1,0 +1,10 @@
+/* Desktop homepage corrections — 09.09.2026 */
+.brand img{width:46px!important;height:46px!important;object-fit:contain!important;object-position:center!important;padding:4px!important;border-radius:12px!important;background:rgba(66,245,230,.055)!important;filter:drop-shadow(0 0 12px rgba(66,245,230,.24))!important;flex:0 0 46px!important}
+.home-news .news-grid article:first-child img{display:block!important;visibility:visible!important;opacity:1!important;background:#0b1428!important}
+@media(min-width:851px){
+  .home-hero .hero-card:before{inset:24px!important;background-position:center 10%!important;background-size:138px auto!important;opacity:1!important;filter:drop-shadow(0 0 22px rgba(66,245,230,.24))!important}
+  .home-hero .hero-card:after{bottom:148px!important}
+  .home-hero .hero-card>p{bottom:104px!important}
+  .home-hero .stats{bottom:50px!important}
+}
+@media(max-width:850px){.brand img{width:40px!important;height:40px!important;flex-basis:40px!important;padding:3px!important}}
