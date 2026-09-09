@@ -26,6 +26,7 @@ const docs={
   'protocol-2026-04':{title:'Протокол Президиума № 4 от 15.04.2026',meta:'Президиум • Судейский комитет',file:'documents/presidium/2026/protocol_prezidiuma_04_15-04-2026.pdf'},
   'protocol-2026-05':{title:'Протокол Президиума № 5 от 10.06.2026',meta:'Президиум • I разряд, КМС и МС',file:'documents/presidium/2026/protocol_prezidiuma_05_10-06-2026.pdf'},
   'protocol-2026-06':{title:'Протокол Президиума № 6 от 30.06.2026',meta:'Президиум • I разряд, КМС и МС',file:'documents/presidium/2026/protocol_prezidiuma_06_30-06-2026.pdf'},
+  'protocol-2026-07':{title:'Протокол Президиума № 7 от 31.08.2026',meta:'Президиум • утверждение новых редакций локальных актов',file:'documents/presidium/2026/protocol_prezidiuma_07_31-08-2026.html'},
   'reg-trainers-current':{title:'Положение о Тренерском совете',meta:'Доступная публичная редакция от 01.03.2026',file:'documents/regulations/2026/polozhenie_trenerskiy_sovet_01-03-2026.pdf'},
   'reg-judges-current':{title:'Положение о Судейском комитете',meta:'Доступная публичная редакция от 15.04.2026',file:'documents/regulations/2026/polozhenie_sudeyskiy_komitet_15-04-2026.pdf'},
   'reg-ranks-23-current':{title:'Положение о II и III спортивных разрядах',meta:'Доступная публичная редакция от 01.04.2026',file:'documents/regulations/2026/polozhenie_II_III_razryady_01-04-2026.pdf'},
@@ -40,7 +41,7 @@ const doc=docs[id];
 const title=document.getElementById('doc-title'),meta=document.getElementById('doc-meta'),viewer=document.getElementById('viewer');
 if(!doc){title.textContent='Документ не найден';meta.textContent='Проверьте ссылку или вернитесь в раздел документов.';viewer.innerHTML='<div class="viewer-error">Этот документ сейчас недоступен в публичном реестре.</div>';}else{
   document.title=doc.title+' — Федерация фиджитал-спорта Ростовской области';title.textContent=doc.title;meta.textContent=doc.meta;
-  const stamp=(doc.file.includes('?')?'&':'?')+'v=20260909';const src=doc.file+stamp+'#toolbar=0&navpanes=0&scrollbar=1&view=FitH';
+  const stamp=(doc.file.includes('?')?'&':'?')+'v=20260909-4';const src=doc.file+stamp+'#toolbar=0&navpanes=0&scrollbar=1&view=FitH';
   const frame=document.createElement('div');frame.className='viewer-frame';const iframe=document.createElement('iframe');iframe.src=src;iframe.title=doc.title;iframe.loading='eager';frame.appendChild(iframe);viewer.appendChild(frame);
   const note=document.createElement('div');note.className='viewer-note';note.textContent='Документ открыт во встроенном режиме просмотра без отдельной кнопки скачивания.';viewer.appendChild(note);
 }
