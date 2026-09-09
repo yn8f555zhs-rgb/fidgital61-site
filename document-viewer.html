@@ -16,9 +16,9 @@
 <footer><div class="wrap foot"><div><b>Федерация фиджитал-спорта Ростовской области</b></div><div><a href="contacts.html">Контакты</a><br><a href="privacy.html">Политика обработки персональных данных</a></div></div></footer>
 <script>
 const docs={
-  'ustav':{title:'Устав Федерации',meta:'Основной документ Федерации',file:'documents/ustav_federacii.pdf',render:'gview'},
-  'accreditation':{title:'Приказ о государственной аккредитации',meta:'Государственная аккредитация Федерации',file:'documents/prikaz_o_gosudarstvennoy_akkreditacii.pdf',render:'gview'},
-  'minjust':{title:'Свидетельство Минюста',meta:'Сведения о государственной регистрации',file:'documents/svidetelstvo_minjust.pdf',render:'gview'},
+  'ustav':{title:'Устав Федерации',meta:'Основной документ Федерации',file:'documents/ustav_federacii.pdf'},
+  'accreditation':{title:'Приказ о государственной аккредитации',meta:'Государственная аккредитация Федерации',file:'documents/prikaz_o_gosudarstvennoy_akkreditacii.pdf'},
+  'minjust':{title:'Свидетельство Минюста',meta:'Сведения о государственной регистрации',file:'documents/svidetelstvo_minjust.pdf'},
   'protocol-2025-02':{title:'Протокол Президиума № 2 от 12.12.2025',meta:'Архив Президиума • 2025 год',file:'documents/presidium/2025/protocol_prezidiuma_02_12-12-2025.pdf'},
   'protocol-2026-01':{title:'Протокол Президиума № 1 от 01.02.2026',meta:'Президиум • создание Тренерского совета и Судейского комитета',file:'documents/presidium/2026/protocol_prezidiuma_01_01-02-2026.pdf'},
   'protocol-2026-02':{title:'Протокол Президиума № 2 от 01.03.2026',meta:'Президиум • Тренерский совет',file:'documents/presidium/2026/protocol_prezidiuma_02_01-03-2026.pdf'},
@@ -43,19 +43,13 @@ if(!doc){
   title.textContent='Документ не найден';meta.textContent='Проверьте ссылку или вернитесь в раздел документов.';viewer.innerHTML='<div class="viewer-error">Этот документ сейчас недоступен в публичном реестре.</div>';
 }else{
   document.title=doc.title+' — Федерация фиджитал-спорта Ростовской области';title.textContent=doc.title;meta.textContent=doc.meta;
-  const absolute=new URL(doc.file,location.href).href;
-  let src;
-  if(doc.render==='gview'){
-    src='https://docs.google.com/gview?embedded=1&url='+encodeURIComponent(absolute+'?v=20260909-6');
-  }else{
-    const stamp=(doc.file.includes('?')?'&':'?')+'v=20260909-6';
-    src=doc.file+stamp+(doc.file.endsWith('.pdf')?'#toolbar=0&navpanes=0&scrollbar=1&view=FitH':'');
-  }
+  const stamp=(doc.file.includes('?')?'&':'?')+'v=20260909-7';
+  const src=doc.file+stamp+(doc.file.endsWith('.pdf')?'#toolbar=0&navpanes=0&scrollbar=1&view=FitH':'');
   const frame=document.createElement('div');frame.className='viewer-frame';
   const iframe=document.createElement('iframe');iframe.src=src;iframe.title=doc.title;iframe.loading='eager';iframe.allow='fullscreen';frame.appendChild(iframe);viewer.appendChild(frame);
-  const note=document.createElement('div');note.className='viewer-note';note.textContent=doc.render==='gview'?'Документ открыт через совместимый веб-просмотрщик. Это помогает корректно показывать большие и сканированные PDF в разных браузерах.':'Документ открыт во встроенном режиме просмотра без отдельной кнопки скачивания.';viewer.appendChild(note);
-  if(doc.render==='gview'){
-    const fb=document.createElement('div');fb.className='viewer-fallback';fb.innerHTML='<a href="'+absolute+'" target="_blank" rel="noopener">Если просмотрщик не появился — открыть оригинал документа в новой вкладке →</a>';viewer.appendChild(fb);
+  const note=document.createElement('div');note.className='viewer-note';note.textContent=doc.file.endsWith('.pdf')?'Документ открыт напрямую с сайта Федерации во встроенном режиме просмотра. Загрузка с Google Docs больше не используется.':'Документ открыт во встроенном режиме просмотра.';viewer.appendChild(note);
+  if(doc.file.endsWith('.pdf')){
+    const fb=document.createElement('div');fb.className='viewer-fallback';fb.innerHTML='<a href="'+doc.file+'?v=20260909-7" target="_blank" rel="noopener">Если встроенный просмотр не появился — открыть документ напрямую в новой вкладке →</a>';viewer.appendChild(fb);
   }
 }
 const b=document.querySelector('.menu'),n=document.querySelector('nav');b.onclick=()=>n.classList.toggle('open');document.querySelectorAll('nav a').forEach(a=>a.onclick=()=>n.classList.remove('open'));
