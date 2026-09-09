@@ -1,6 +1,9 @@
-/* Homepage fixes — 09.09.2026 v4 */
+/* Homepage fixes — 09.09.2026 v5 */
 .brand img{width:54px!important;height:54px!important;object-fit:contain!important;object-position:center!important;padding:0!important;border-radius:13px!important;background:#081325!important;filter:drop-shadow(0 0 14px rgba(66,245,230,.22))!important;flex:0 0 54px!important}
-.home-news .news-grid article:first-child img{display:block!important;visibility:visible!important;opacity:1!important;background:#081325!important;object-fit:cover!important}
+.featured-news .news-cover{display:block!important;width:100%!important;height:auto!important;max-height:430px!important;object-fit:contain!important;object-position:center!important;background:#081325!important;border-radius:14px!important;margin-bottom:18px!important}
+.featured-news .competition-photo{margin:18px 0 14px!important;padding:0!important;border-radius:14px!important;overflow:hidden!important;background:#081325!important;border:1px solid rgba(130,170,255,.16)!important}
+.featured-news .competition-photo img{display:block!important;width:100%!important;height:auto!important;max-height:420px!important;object-fit:cover!important;object-position:center!important;background:#081325!important}
+.featured-news .competition-photo figcaption{padding:10px 12px!important;font-size:12px!important;line-height:1.4!important;color:#9fb0c9!important;background:rgba(6,15,31,.92)!important}
 @media(min-width:851px){
   .home-hero .hero-card:before{content:""!important;position:absolute!important;inset:24px!important;background:url('brand-mark.svg?v=1') center 12%/190px auto no-repeat!important;opacity:1!important;filter:drop-shadow(0 0 24px rgba(66,245,230,.22))!important}
   .home-hero .hero-card:after{bottom:150px!important}
@@ -10,4 +13,5 @@
 @media(max-width:850px){
   .brand img{width:42px!important;height:42px!important;flex-basis:42px!important}
   .home-hero .hero-card:before{background-image:url('brand-mark.svg?v=1')!important}
+  .featured-news .news-cover,.featured-news .competition-photo img{max-height:none!important}
 }
