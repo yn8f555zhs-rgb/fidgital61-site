@@ -1,0 +1,44 @@
+name: Install current federation documents
+
+on:
+  push:
+    paths:
+      - '.tmp/current-docs/READY'
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install current PDF documents
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from io import BytesIO
+          import base64, zipfile, shutil
+          d = Path('.tmp/current-docs')
+          parts = sorted(d.glob('part*'))
+          if not parts:
+              raise SystemExit('No current document chunks found')
+          payload = base64.b64decode(''.join(p.read_text().strip() for p in parts), validate=True)
+          with zipfile.ZipFile(BytesIO(payload)) as z:
+              z.extractall('.')
+              print('Installed:', *z.namelist(), sep='\n- ')
+          shutil.rmtree(d, ignore_errors=True)
+          PY
+      - name: Commit current documents
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Publish current federation documents"
+            git push
+          fi
