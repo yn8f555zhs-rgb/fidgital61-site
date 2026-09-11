@@ -1,0 +1,37 @@
+name: Install current local acts HTML
+
+on:
+  push:
+    paths:
+      - '.tmp/current_html_pack.b64'
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Decode current local acts
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 -d .tmp/current_html_pack.b64 > /tmp/current_html_pack.tar.gz
+          tar -xzf /tmp/current_html_pack.tar.gz
+          test -f documents/rendered/current/trainers.html
+          test -f documents/rendered/current/judges.html
+          test -f documents/rendered/current/ranks-23.html
+          test -f documents/rendered/current/ranks-1kmsms.html
+          rm -f .tmp/current_html_pack.b64
+      - name: Commit installed acts
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Publish current local acts approved 31.08.2026"
+          git push
