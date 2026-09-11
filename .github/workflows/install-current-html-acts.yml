@@ -3,7 +3,7 @@ name: Install current local acts HTML
 on:
   push:
     paths:
-      - '.tmp/current_html_pack/part06'
+      - '.tmp/current_html_pack/part01'
 
 permissions:
   contents: write
