@@ -3,7 +3,7 @@ name: Install current local acts HTML
 on:
   push:
     paths:
-      - '.tmp/current_html_pack.b64'
+      - '.tmp/current_html_pack/part06'
 
 permissions:
   contents: write
@@ -19,12 +19,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          base64 -d .tmp/current_html_pack.b64 > /tmp/current_html_pack.tar.gz
-          tar -xzf /tmp/current_html_pack.tar.gz
+          mkdir -p /tmp/current_html_pack
+          cat .tmp/current_html_pack/part01 .tmp/current_html_pack/part02 .tmp/current_html_pack/part03 .tmp/current_html_pack/part04 .tmp/current_html_pack/part05 .tmp/current_html_pack/part06 > /tmp/current_html_pack/payload.b64
+          base64 -d /tmp/current_html_pack/payload.b64 > /tmp/current_html_pack/current_html_pack.tar.gz
+          tar -xzf /tmp/current_html_pack/current_html_pack.tar.gz
           test -f documents/rendered/current/trainers.html
           test -f documents/rendered/current/judges.html
           test -f documents/rendered/current/ranks-23.html
           test -f documents/rendered/current/ranks-1kmsms.html
+          rm -rf .tmp/current_html_pack
           rm -f .tmp/current_html_pack.b64
       - name: Commit installed acts
         shell: bash
