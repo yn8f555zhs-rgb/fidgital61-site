@@ -1,9 +1,21 @@
-/* Homepage fixes — 09.09.2026 v5 */
+/* Homepage fixes — 11.09.2026 v6 */
 .brand img{width:54px!important;height:54px!important;object-fit:contain!important;object-position:center!important;padding:0!important;border-radius:13px!important;background:#081325!important;filter:drop-shadow(0 0 14px rgba(66,245,230,.22))!important;flex:0 0 54px!important}
-.featured-news .news-cover{display:block!important;width:100%!important;height:auto!important;max-height:430px!important;object-fit:contain!important;object-position:center!important;background:#081325!important;border-radius:14px!important;margin-bottom:18px!important}
-.featured-news .competition-photo{margin:18px 0 14px!important;padding:0!important;border-radius:14px!important;overflow:hidden!important;background:#081325!important;border:1px solid rgba(130,170,255,.16)!important}
-.featured-news .competition-photo img{display:block!important;width:100%!important;height:auto!important;max-height:420px!important;object-fit:cover!important;object-position:center!important;background:#081325!important}
-.featured-news .competition-photo figcaption{padding:10px 12px!important;font-size:12px!important;line-height:1.4!important;color:#9fb0c9!important;background:rgba(6,15,31,.92)!important}
+
+/* The base stylesheet historically turns every image in the first news card into an absolute background.
+   Override it with higher specificity so the cover and the real competition photo render as normal blocks. */
+html body .home-news .news-grid article.featured-news{display:flex!important;flex-direction:column!important;justify-content:flex-start!important;min-height:0!important;padding:22px!important;overflow:hidden!important}
+html body .home-news .news-grid article.featured-news:after{display:none!important;content:none!important}
+html body .home-news .news-grid article.featured-news .news-cover{position:static!important;inset:auto!important;z-index:auto!important;display:block!important;visibility:visible!important;opacity:1!important;width:100%!important;height:auto!important;min-height:0!important;max-height:430px!important;object-fit:contain!important;object-position:center!important;background:#081325!important;border:0!important;border-radius:14px!important;margin:0 0 18px!important;filter:none!important}
+html body .home-news .news-grid article.featured-news .competition-photo{position:static!important;display:block!important;margin:0 0 18px!important;padding:0!important;border-radius:14px!important;overflow:hidden!important;background:#081325!important;border:1px solid rgba(130,170,255,.16)!important}
+html body .home-news .news-grid article.featured-news .competition-photo img{position:static!important;inset:auto!important;z-index:auto!important;display:block!important;visibility:visible!important;opacity:1!important;width:100%!important;height:auto!important;min-height:0!important;max-height:520px!important;object-fit:contain!important;object-position:center!important;background:#081325!important;border:0!important;border-radius:0!important;margin:0!important;filter:none!important}
+html body .home-news .news-grid article.featured-news .competition-photo figcaption{position:static!important;padding:10px 12px!important;font-size:12px!important;line-height:1.4!important;color:#9fb0c9!important;background:rgba(6,15,31,.92)!important}
+html body .home-news .news-grid article.featured-news .news-date,
+html body .home-news .news-grid article.featured-news h3,
+html body .home-news .news-grid article.featured-news p{position:static!important;z-index:auto!important;margin-left:0!important;margin-right:0!important}
+html body .home-news .news-grid article.featured-news .news-date{margin-top:4px!important;margin-bottom:8px!important}
+html body .home-news .news-grid article.featured-news h3{margin-top:0!important;margin-bottom:12px!important}
+html body .home-news .news-grid article.featured-news p{margin:0 0 14px!important;padding:0!important}
+
 @media(min-width:851px){
   .home-hero .hero-card:before{content:""!important;position:absolute!important;inset:24px!important;background:url('brand-mark.svg?v=1') center 12%/190px auto no-repeat!important;opacity:1!important;filter:drop-shadow(0 0 24px rgba(66,245,230,.22))!important}
   .home-hero .hero-card:after{bottom:150px!important}
@@ -13,5 +25,7 @@
 @media(max-width:850px){
   .brand img{width:42px!important;height:42px!important;flex-basis:42px!important}
   .home-hero .hero-card:before{background-image:url('brand-mark.svg?v=1')!important}
-  .featured-news .news-cover,.featured-news .competition-photo img{max-height:none!important}
+  html body .home-news .news-grid article.featured-news{flex-basis:88vw!important;padding:18px!important;min-height:0!important}
+  html body .home-news .news-grid article.featured-news .news-cover,
+  html body .home-news .news-grid article.featured-news .competition-photo img{max-height:none!important}
 }
