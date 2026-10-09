@@ -3,7 +3,7 @@ name: Repair Sport Tourism Poster
 on:
   push:
     paths:
-      - '.tmp/sport-tourism/run-v2'
+      - 'repair-poster-trigger.txt'
 
 permissions:
   contents: write
