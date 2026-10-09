@@ -13,17 +13,30 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Pillow
         run: python -m pip install --quiet pillow
-      - name: Verify every news image
+      - name: Verify images actually used by news
         run: |
           python - <<'PY'
           from pathlib import Path
           from PIL import Image
-          import mimetypes
-          for p in sorted(Path("assets/news").iterdir()):
-              if not p.is_file():
+          import re, sys
+          html = Path("index.html").read_text(encoding="utf-8")
+          block = re.search(r'<div class="cards news news-grid">(.*?)</div>\s*</div>\s*</section>', html, re.S).group(1)
+          srcs = re.findall(r'<img[^>]+src="([^"]+)"', block)
+          print("NEWS IMAGES:", len(srcs))
+          bad = []
+          for src in srcs:
+              path = src.split("?",1)[0]
+              p = Path(path)
+              print("\n", path, "exists=", p.exists(), "bytes=", p.stat().st_size if p.exists() else 0)
+              if not p.exists():
+                  bad.append((path,"missing"))
                   continue
-              print("\nFILE", p, "bytes=", p.stat().st_size)
-              print("MIME", mimetypes.guess_type(p.name)[0])
+              if p.suffix.lower() == ".svg":
+                  txt=p.read_text(encoding="utf-8")
+                  ok=txt.lstrip().startswith("<svg")
+                  print("SVG", "OK" if ok else "BROKEN")
+                  if not ok: bad.append((path,"bad svg"))
+                  continue
               try:
                   with Image.open(p) as im:
                       print("PIL", im.format, im.size, im.mode)
@@ -32,5 +45,10 @@ jobs:
                       im.load()
                       print("LOAD OK")
               except Exception as e:
-                  print("BROKEN", type(e).__name__, str(e))
+                  print("BROKEN", repr(e))
+                  bad.append((path,str(e)))
+          if bad:
+              print("FAILED:", bad)
+              sys.exit(1)
+          print("\nALL REFERENCED NEWS IMAGES DECODE OK")
           PY
