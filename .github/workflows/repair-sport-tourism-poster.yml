@@ -1,0 +1,61 @@
+name: Repair Sport Tourism Poster
+
+on:
+  push:
+    paths:
+      - '.tmp/sport-tourism/run-v2'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild and verify poster
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets/news
+          cat             .tmp/sport-tourism/chunk_00             .tmp/sport-tourism/chunk_01             .tmp/sport-tourism/chunk_02             .tmp/sport-tourism/chunk_03             .tmp/sport-tourism/chunk_04             .tmp/sport-tourism/chunk_05             | base64 -d > assets/news/sport-tourism-fair-2026.webp
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("assets/news/sport-tourism-fair-2026.webp")
+          b = p.read_bytes()
+          assert b[:4] == b"RIFF", b[:12]
+          assert b[8:12] == b"WEBP", b[:12]
+          declared = int.from_bytes(b[4:8], "little") + 8
+          assert len(b) == 29004, len(b)
+          assert declared == len(b), (declared, len(b))
+          print("VALID_WEBP", len(b), b[:12])
+          PY
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("index.html")
+          s = p.read_text(encoding="utf-8")
+          old = "assets/news/sport-tourism-fair-2026.webp?v=1"
+          new = "assets/news/sport-tourism-fair-2026.webp?v=2"
+          if old in s:
+              s = s.replace(old, new)
+          elif new not in s:
+              raise SystemExit("Expected image URL not found in index.html")
+          p.write_text(s, encoding="utf-8")
+          PY
+
+      - name: Commit repaired poster
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/news/sport-tourism-fair-2026.webp index.html
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+            exit 0
+          fi
+          git commit -m "Repair Sport and Tourism Day poster"
+          git push
