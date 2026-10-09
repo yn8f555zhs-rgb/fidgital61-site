@@ -1,0 +1,49 @@
+name: Sync news images
+on:
+  push:
+    paths:
+      - '.tmp/sync-news-images-v1'
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Pillow
+        run: python -m pip install --quiet pillow
+      - name: Download and optimize official news photos
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from io import BytesIO
+          from urllib.request import Request, urlopen
+          from PIL import Image
+
+          items = [
+              ("https://news.donstu.ru/upload/iblock/6e8/r3ihbpfanq1kwsy8urvnaw6e0a7jeg3i.jpg", "assets/news/cup-russia-2026-dgtu.webp"),
+              ("https://news.donstu.ru/upload/iblock/ed3/vgn7xs1ivof7n1z8bzd14e0mdhguza49.jpeg", "assets/news/yufo-skfo-phygital.webp"),
+              ("https://news.donstu.ru/upload/iblock/f30/yaxz5q7yfgz5301080hkj4vhrp5c9ei8.jpg", "assets/news/rostov-championship-phygital.webp"),
+              ("https://news.donstu.ru/upload/iblock/c1d/iok4uarmcvn7js72352gtfxlima20saq.JPG", "assets/news/russia-championship-2025-silver.webp"),
+          ]
+          Path("assets/news").mkdir(parents=True, exist_ok=True)
+          for url, out in items:
+              req = Request(url, headers={"User-Agent":"Mozilla/5.0"})
+              data = urlopen(req, timeout=30).read()
+              im = Image.open(BytesIO(data)).convert("RGB")
+              im.thumbnail((1200, 1200))
+              im.save(out, "WEBP", quality=84, method=6)
+              print(out, im.size)
+          PY
+      - name: Commit images
+        run: |
+          git config user.name "ffsro-site-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add assets/news/
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Add optimized local photos for news archive"
+            git push
+          fi
