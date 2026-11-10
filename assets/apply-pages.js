@@ -328,18 +328,137 @@ function addTeam(){
   team.querySelectorAll('.person').forEach(attachAutocomplete);attachTeamAutocomplete(team);dtsTeams.appendChild(team);renumberTeams();
 }
 
+
+function sportAthleteFields(role){
+  return `<div class="person" data-role="${role}">
+    <div class="person-head"><h4>${role}</h4><button type="button" class="mini-btn danger remove-sport-athlete">Удалить</button></div>
+    <div class="autocomplete-wrap"><div class="help athlete-lookup-help">Начните вводить фамилию или имя, чтобы выбрать спортсмена из прежних заявок этого браузера.</div><div class="athlete-suggestions hidden"></div></div>
+    <div class="form-grid">
+      <div class="field"><label>Фамилия *</label><input data-k="lastName" autocomplete="off" required></div>
+      <div class="field"><label>Имя *</label><input data-k="firstName" autocomplete="off" required></div>
+      <div class="field"><label>Отчество</label><input data-k="middleName"></div>
+      <div class="field"><label>Дата рождения *</label><input data-k="birthDate" type="date" required></div>
+      <div class="field full"><label>Игровой никнейм (если есть)</label><input data-k="nickname"></div>
+    </div></div>`;
+}
+function renumberSportAthletes(team){
+  [['main','Основной спортсмен'],['reserve','Запасной спортсмен']].forEach(([kind,prefix])=>{
+    const cards=[...team.querySelectorAll('.'+kind+'-list .person')];
+    cards.forEach((card,i)=>{
+      const role=prefix+' '+(i+1);
+      card.dataset.role=role;
+      const heading=card.querySelector('.person-head h4');if(heading)heading.textContent=role;
+      const remove=card.querySelector('.remove-sport-athlete');
+      if(remove)remove.classList.toggle('hidden',kind==='main'&&cards.length===1);
+    });
+  });
+}
+function addSportAthlete(team,reserve=false){
+  const list=team.querySelector(reserve?'.reserve-list':'.main-list');
+  const holder=document.createElement('div');
+  holder.className='sport-athlete';
+  holder.innerHTML=sportAthleteFields(reserve?'Запасной спортсмен':'Основной спортсмен');
+  const card=holder.querySelector('.person');
+  card.querySelector('.remove-sport-athlete').addEventListener('click',()=>{
+    if(!reserve&&list.querySelectorAll('.person').length===1)return;
+    holder.remove();renumberSportAthletes(team);
+  });
+  list.appendChild(holder);
+  attachAutocomplete(card);
+  renumberSportAthletes(team);
+  return card;
+}
+function renumberSportTeams(){
+  const teams=[...sportsTeams.querySelectorAll('.team-card')];
+  teams.forEach((team,i)=>{
+    team.dataset.teamNumber=String(i+1);
+    const title=team.querySelector('.team-title');if(title)title.textContent='Команда №'+(i+1);
+    const remove=team.querySelector('.remove-team');if(remove)remove.classList.toggle('hidden',teams.length===1);
+  });
+}
+function fillSavedSportTeam(team,saved){
+  team.querySelector('[data-team-name]').value=saved.teamName||'';
+  const coach=team.querySelector('[data-team-coach]');if(coach)coach.value=saved.coachName||'';
+  team.querySelector('.main-list').innerHTML='';
+  team.querySelector('.reserve-list').innerHTML='';
+  const athletes=Array.isArray(saved.athletes)?saved.athletes:[];
+  const mains=athletes.filter(a=>String(a.role||'').startsWith('Основной'));
+  const reserves=athletes.filter(a=>String(a.role||'').startsWith('Запасной'));
+  (mains.length?mains:[{}]).forEach(a=>fillAthlete(addSportAthlete(team,false),a));
+  reserves.forEach(a=>fillAthlete(addSportAthlete(team,true),a));
+  hideTeamSuggestions(team);
+}
+function attachSportTeamAutocomplete(team){
+  const input=team.querySelector('[data-team-name]');if(!input)return;
+  let timer;
+  const run=()=>renderTeamSuggestions(team,input.value.trim()?localTeamSearch(input.value,team.dataset.discipline):[],true);
+  input.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(run,120);});
+  input.addEventListener('focus',run);
+}
+function addSportTeam(){
+  const mode=discipline.value;if(!isSportMode(mode))return;
+  sportTeamCounter++;
+  const team=document.createElement('div');
+  team.className='team-card';
+  team.dataset.teamNumber=String(sportTeamCounter);
+  team.dataset.discipline=mode;
+  team.innerHTML=`<div class="team-head"><div><div class="tag">${mode}</div><h3 class="team-title">Команда №${sportTeamCounter}</h3></div><button type="button" class="mini-btn danger remove-team">Удалить команду</button></div>
+    <div class="field full"><label>Название команды *</label><div class="autocomplete-wrap"><div class="help athlete-lookup-help">Ранее заявленную команду можно найти по названию и восстановить её состав.</div><input data-team-name autocomplete="off" required><div class="team-suggestions athlete-suggestions hidden"></div></div></div>
+    <div class="field full"><label>ФИО тренера / представителя команды</label><input data-team-coach></div>
+    <div class="roster-label">Основной состав команды</div><div class="main-list"></div><button type="button" class="mini-btn add-sport-main">＋ Добавить спортсмена</button>
+    <div class="roster-label">Запасные спортсмены</div><div class="reserve-list"></div><button type="button" class="mini-btn add-sport-reserve">＋ Добавить запасного</button>`;
+  team.querySelector('.remove-team').addEventListener('click',()=>{
+    if(sportsTeams.querySelectorAll('.team-card').length<=1)return;
+    team.remove();renumberSportTeams();
+  });
+  team.querySelector('.add-sport-main').addEventListener('click',()=>addSportAthlete(team,false));
+  team.querySelector('.add-sport-reserve').addEventListener('click',()=>addSportAthlete(team,true));
+  sportsTeams.appendChild(team);
+  addSportAthlete(team,false);
+  attachSportTeamAutocomplete(team);
+  renumberSportTeams();
+}
+function collectSportTeams(){
+  return [...sportsTeams.querySelectorAll('.team-card')].map((team,i)=>{
+    const teamName=team.querySelector('[data-team-name]').value.trim();
+    const coachName=team.querySelector('[data-team-coach]').value.trim();
+    const athletes=[...team.querySelectorAll('.person')].map(card=>{
+      const a=collectCard(card);a.teamName=teamName;return a;
+    });
+    return {teamNumber:i+1,teamName,coachName,athletes};
+  });
+}
+
 function resetParticipants(mode){
   if(mode==='Ритм-симулятор' && rhythmPeople.children.length===0)addRhythmAthlete();
   if(mode==='DTS' && dtsTeams.querySelectorAll('.team-card').length===0)addTeam();
+  if(isSportMode(mode) && sportsTeams.querySelectorAll('.team-card').length===0)addSportTeam();
 }
 
 function setMode(){
-  const mode=discipline.value;const selected=mode==='DTS'||mode==='Ритм-симулятор';
+  const mode=discipline.value;
+  const selected=isTeamMode(mode)||mode==='Ритм-симулятор';
+  if(isSportMode(mode)&&sportsTeams.dataset.discipline!==mode){
+    sportsTeams.innerHTML='';
+    sportsTeams.dataset.discipline=mode;
+  }
   showStep(contactStep,selected);showStep(participantsStep,selected);showStep(confirmStep,selected);
-  rhythmBlock.classList.toggle('hidden',mode!=='Ритм-симулятор');dtsBlock.classList.toggle('hidden',mode!=='DTS');
-  setSubtreeDisabled(rhythmBlock,mode!=='Ритм-симулятор');setSubtreeDisabled(dtsBlock,mode!=='DTS');
-  if(mode==='Ритм-симулятор'){$('participantsTitle').textContent='Спортсмены — ритм-симулятор';$('participantsHelp').textContent='Добавьте одного или сразу нескольких спортсменов в одну предварительную заявку.';}
-  else if(mode==='DTS'){$('participantsTitle').textContent='Команды ДТС';$('participantsHelp').textContent='Добавьте одну или несколько команд. Можно выбрать сохранённую ранее команду и восстановить её состав.';}
+  rhythmBlock.classList.toggle('hidden',mode!=='Ритм-симулятор');
+  dtsBlock.classList.toggle('hidden',mode!=='DTS');
+  sportsBlock.classList.toggle('hidden',!isSportMode(mode));
+  setSubtreeDisabled(rhythmBlock,mode!=='Ритм-симулятор');
+  setSubtreeDisabled(dtsBlock,mode!=='DTS');
+  setSubtreeDisabled(sportsBlock,!isSportMode(mode));
+  if(mode==='Ритм-симулятор'){
+    $('participantsTitle').textContent='Спортсмены — ритм-симулятор';
+    $('participantsHelp').textContent='Добавьте одного или сразу нескольких спортсменов в одну предварительную заявку.';
+  }else if(mode==='DTS'){
+    $('participantsTitle').textContent='Команды ДТС';
+    $('participantsHelp').textContent='Добавьте одну или несколько команд. Можно выбрать сохранённую ранее команду и восстановить её состав.';
+  }else if(isSportMode(mode)){
+    $('participantsTitle').textContent='Команды — '+mode;
+    $('participantsHelp').textContent='Укажите название и полный состав команды. Можно подать несколько команд одной заявкой.';
+  }
   resetParticipants(mode);
 }
 
@@ -349,8 +468,10 @@ function collectTeams(){return [...dtsTeams.querySelectorAll('.team-card')].map(
 function makeId(){return 'FFS-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();}
 
 function buildPayload(){
-  const mode=discipline.value;const teams=mode==='DTS'?collectTeams():[];const athletes=mode==='DTS'?teams.flatMap(t=>t.athletes):collectRhythm();
-  return {submissionId:makeId(),competition:competition.value,discipline:mode,teamName:mode==='DTS'?teams.map(t=>t.teamName).join(' / '):'',teams,contact:{lastName:$('cLast').value.trim(),firstName:$('cFirst').value.trim(),middleName:$('cMiddle').value.trim(),phone:$('cPhone').value.trim(),email:$('cEmail').value.trim(),city:$('cCity').value.trim(),organization:$('cOrg').value.trim()},athletes,comment:$('comment').value.trim()};
+  const mode=discipline.value;
+  const teams=mode==='DTS'?collectTeams():(isSportMode(mode)?collectSportTeams():[]);
+  const athletes=isTeamMode(mode)?teams.flatMap(t=>t.athletes):collectRhythm();
+  return {submissionId:makeId(),competition:competition.value,discipline:mode,teamName:isTeamMode(mode)?teams.map(t=>t.teamName).join(' / '):'',teams,contact:{lastName:$('cLast').value.trim(),firstName:$('cFirst').value.trim(),middleName:$('cMiddle').value.trim(),phone:$('cPhone').value.trim(),email:$('cEmail').value.trim(),city:$('cCity').value.trim(),organization:$('cOrg').value.trim()},athletes,comment:$('comment').value.trim()};
 }
 
 function allowed(){const item=activeCompetitions().find(i=>i.name===competition.value);return !!item&&(item.disciplines||[]).includes(discipline.value);}
@@ -359,6 +480,14 @@ function validateRoster(payload){
   if(payload.discipline==='DTS'){
     if(payload.teams.length<1)return 'Добавьте хотя бы одну команду ДТС.';
     for(const team of payload.teams){if(!team.teamName)return 'Укажите название каждой команды ДТС.';const mains=team.athletes.filter(a=>a.role.startsWith('Основной'));if(mains.length!==5)return `В команде «${team.teamName}» должно быть 5 основных спортсменов.`;}
+  }
+  if(isSportMode(payload.discipline)){
+    if(!payload.teams.length)return 'Добавьте хотя бы одну команду.';
+    for(const team of payload.teams){
+      if(!team.teamName)return 'Укажите название каждой команды.';
+      if(team.athletes.filter(a=>a.role.startsWith('Основной')).length<1)
+        return 'Для команды «'+team.teamName+'» добавьте хотя бы одного спортсмена.';
+    }
   }
   return '';
 }
@@ -373,17 +502,17 @@ async function postLegacyPayload(payload){
 }
 
 async function sendPayload(payload){
-  if(payload.discipline==='DTS'){
+  if(isTeamMode(payload.discipline)){
     for(let i=0;i<payload.teams.length;i++){
       const team=payload.teams[i];
-      await postLegacyPayload({...payload,submissionId:`${payload.submissionId}-T${i+1}`,teamName:team.teamName,teams:[],athletes:team.athletes});
+      await postLegacyPayload({...payload,submissionId:`${payload.submissionId}-T${i+1}`,teamName:team.teamName,teams:[],athletes:team.athletes,comment:[payload.comment,team.coachName?'Тренер / представитель: '+team.coachName:''].filter(Boolean).join(' | ')});
     }
   }else{
     await postLegacyPayload({...payload,teams:[]});
   }
 }
 
-competition.addEventListener('change',loadDisciplines);discipline.addEventListener('change',setMode);$('addRhythmBtn').addEventListener('click',addRhythmAthlete);$('addTeamBtn').addEventListener('click',addTeam);
+competition.addEventListener('change',loadDisciplines);discipline.addEventListener('change',setMode);$('addRhythmBtn').addEventListener('click',addRhythmAthlete);$('addTeamBtn').addEventListener('click',addTeam);$('addSportTeamBtn').addEventListener('click',addSportTeam);
 $('downloadBtn').addEventListener('click',()=>{if(!form.reportValidity()||!allowed())return;const payload=buildPayload();const err=validateRoster(payload);if(err)return alert(err);download(payload);});
 
 form.addEventListener('submit',async e=>{
@@ -393,7 +522,7 @@ form.addEventListener('submit',async e=>{
   try{
     await sendPayload(payload);
     saveToLocalRegistry(payload);
-    statusBox.innerHTML=`Предварительная заявка <b>${payload.submissionId}</b> отправлена на обработку. Данные спортсменов${payload.discipline==='DTS'?' и команд':''} сохранены в этом браузере для следующих соревнований.`;
+    statusBox.innerHTML=`Предварительная заявка <b>${payload.submissionId}</b> отправлена на обработку. Данные спортсменов${isTeamMode(payload.discipline)?' и команд':''} сохранены в этом браузере для следующих соревнований.`;
   }catch{
     statusBox.textContent='Не удалось отправить предварительную заявку. Проверьте интернет-соединение и попробуйте ещё раз.';
   }
