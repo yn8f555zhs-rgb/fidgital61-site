@@ -1,0 +1,21 @@
+name: Test registration disciplines
+on:
+  push:
+    paths:
+      - '.tmp/test-registration-v1'
+permissions:
+  contents: read
+jobs:
+  form-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: node --check assets/apply-pages.js && node --check assets/form-config.js
+      - name: Install DOM test dependency
+        run: npm install --no-save jsdom@26
+      - name: Test all four disciplines without contacting live backend
+        run: node tests/application-forms.mjs
