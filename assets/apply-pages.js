@@ -7,6 +7,8 @@ const participantsStep = $('participantsStep');
 const confirmStep = $('confirmStep');
 const rhythmBlock = $('rhythmBlock');
 const dtsBlock = $('dtsBlock');
+const sportsBlock = $('sportsBlock');
+const sportsTeams = $('sportsTeams');
 const rhythmPeople = $('rhythmPeople');
 const dtsTeams = $('dtsTeams');
 const statusBox = $('status');
@@ -15,6 +17,10 @@ const form = $('appForm');
 const REGISTRY_KEY = 'ffs61-local-registry-v1';
 let rhythmCounter = 0;
 let teamCounter = 0;
+let sportTeamCounter = 0;
+const SPORT_MODES = ['Фиджитал-баскетбол','Фиджитал-футбол'];
+const isSportMode = mode => SPORT_MODES.includes(mode);
+const isTeamMode = mode => mode === 'DTS' || isSportMode(mode);
 
 function activeCompetitions(){
   return (cfg.competitions || []).filter(x =>
@@ -25,6 +31,8 @@ function activeCompetitions(){
 function disciplineLabel(value){
   if(value === 'DTS') return 'Команда ДТС — двоеборье «тактическая стрельба»';
   if(value === 'Ритм-симулятор') return 'Ритм-симулятор — спортсмены';
+  if(value === 'Фиджитал-баскетбол') return 'Фиджитал-баскетбол — командная заявка';
+  if(value === 'Фиджитал-футбол') return 'Фиджитал-футбол — командная заявка';
   return value;
 }
 
@@ -114,12 +122,14 @@ function saveToLocalRegistry(payload){
     bucket.athletes[athleteId(clean)] = clean;
   });
 
-  if(payload.discipline === 'DTS'){
+  if(isTeamMode(payload.discipline)){
     (payload.teams || []).forEach(t => {
       const teamName = String(t.teamName || '').trim();
       if(!teamName) return;
-      bucket.teams[normalizeText(teamName)] = {
+      bucket.teams[payload.discipline === 'DTS' ? normalizeText(teamName) : payload.discipline + '|' + normalizeText(teamName)] = {
         teamName,
+        discipline: payload.discipline,
+        coachName: String(t.coachName || '').trim(),
         athletes:(t.athletes || []).map(a => ({
           role:String(a.role || '').trim(), lastName:String(a.lastName || '').trim(),
           firstName:String(a.firstName || '').trim(), middleName:String(a.middleName || '').trim(),
@@ -145,13 +155,13 @@ function localAthleteSearch(query){
   ).sort((a,b) => normalizeText(`${a.lastName} ${a.firstName}`).localeCompare(normalizeText(`${b.lastName} ${b.firstName}`),'ru')).slice(0,8);
 }
 
-function localTeamSearch(query){
+function localTeamSearch(query, mode='DTS'){
   const key = ownerKey();
   if(!key) return [];
   const bucket = loadRegistry()[key];
   if(!bucket || !bucket.teams) return [];
   const q = normalizeText(query);
-  return Object.values(bucket.teams).filter(t => normalizeText(t.teamName).includes(q))
+  return Object.values(bucket.teams).filter(t => (t.discipline || 'DTS') === mode && normalizeText(t.teamName).includes(q))
     .sort((a,b) => normalizeText(a.teamName).localeCompare(normalizeText(b.teamName),'ru')).slice(0,8);
 }
 
@@ -221,7 +231,7 @@ function hideTeamSuggestions(team){
   if(box){box.innerHTML='';box.classList.add('hidden');}
 }
 
-function renderTeamSuggestions(team, results){
+function renderTeamSuggestions(team, results, forSport=false){
   const box=team.querySelector('.team-suggestions');
   if(!box) return;
   box.innerHTML='';
@@ -232,7 +242,7 @@ function renderTeamSuggestions(team, results){
     const mains=(saved.athletes||[]).filter(a=>String(a.role||'').startsWith('Основной')).length;
     const reserves=(saved.athletes||[]).filter(a=>String(a.role||'').startsWith('Запасной')).length;
     const small=document.createElement('span');small.textContent=`${mains} основных${reserves?` • ${reserves} запасных`:''}${saved.lastCompetition?` • ${saved.lastCompetition}`:''}`;
-    btn.append(strong,small);btn.addEventListener('click',()=>fillSavedTeam(team,saved));box.appendChild(btn);
+    btn.append(strong,small);btn.addEventListener('click',()=>forSport?fillSavedSportTeam(team,saved):fillSavedTeam(team,saved));box.appendChild(btn);
   });
   box.classList.remove('hidden');
 }
